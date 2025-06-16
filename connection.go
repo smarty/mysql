@@ -350,7 +350,8 @@ func (mc *mysqlConn) Exec(query string, args []driver.Value) (driver.Result, err
 	if mc.closed.Load() {
 		return nil, driver.ErrBadConn
 	}
-	mc.log("Exec", query)
+	queryStart := query[:20]
+	mc.log("Exec: ****  ", queryStart, "  ****")
 	if len(args) != 0 {
 		if !mc.cfg.InterpolateParams {
 			return nil, driver.ErrSkip
