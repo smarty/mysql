@@ -359,6 +359,7 @@ func (mc *mysqlConn) Exec(query string, args []driver.Value) (driver.Result, err
 		// try to interpolate the parameters to save extra roundtrips for preparing and closing a statement
 		prepared, err := mc.interpolateParams(query, args)
 		if err != nil {
+			mc.log(err.Error())
 			return nil, err
 		}
 		query = prepared
@@ -369,6 +370,7 @@ func (mc *mysqlConn) Exec(query string, args []driver.Value) (driver.Result, err
 		copied := mc.result
 		return &copied, err
 	}
+	mc.log(err.Error())
 	return nil, mc.markBadConn(err)
 }
 
@@ -377,23 +379,27 @@ func (mc *mysqlConn) exec(query string) error {
 	handleOk := mc.clearResult()
 	// Send command
 	if err := mc.writeCommandPacketStr(comQuery, query); err != nil {
+		mc.log(err.Error())
 		return mc.markBadConn(err)
 	}
 
 	// Read Result
 	resLen, _, err := handleOk.readResultSetHeaderPacket()
 	if err != nil {
+		mc.log(err.Error())
 		return err
 	}
 
 	if resLen > 0 {
 		// columns
 		if err := mc.skipColumns(resLen); err != nil {
+			mc.log(err.Error())
 			return err
 		}
 
 		// rows
 		if err := mc.skipRows(); err != nil {
+			mc.log(err.Error())
 			return err
 		}
 	}
@@ -418,6 +424,7 @@ func (mc *mysqlConn) query(query string, args []driver.Value) (*textRows, error)
 		// try client-side prepare to reduce roundtrip
 		prepared, err := mc.interpolateParams(query, args)
 		if err != nil {
+			mc.log(err.Error())
 			return nil, err
 		}
 		query = prepared
@@ -425,6 +432,7 @@ func (mc *mysqlConn) query(query string, args []driver.Value) (*textRows, error)
 	// Send command
 	err := mc.writeCommandPacketStr(comQuery, query)
 	if err != nil {
+		mc.log(err.Error())
 		return nil, mc.markBadConn(err)
 	}
 
@@ -432,6 +440,7 @@ func (mc *mysqlConn) query(query string, args []driver.Value) (*textRows, error)
 	var resLen int
 	resLen, _, err = handleOk.readResultSetHeaderPacket()
 	if err != nil {
+		mc.log(err.Error())
 		return nil, err
 	}
 
@@ -505,7 +514,6 @@ func (mc *mysqlConn) finish() {
 
 // Ping implements driver.Pinger interface
 func (mc *mysqlConn) Ping(ctx context.Context) (err error) {
-	mc.log("Ping mysql connection")
 	if mc.closed.Load() {
 		return driver.ErrBadConn
 	}
@@ -572,10 +580,12 @@ func (mc *mysqlConn) QueryContext(ctx context.Context, query string, args []driv
 func (mc *mysqlConn) ExecContext(ctx context.Context, query string, args []driver.NamedValue) (driver.Result, error) {
 	dargs, err := namedValueToValue(args)
 	if err != nil {
+		mc.log(err.Error())
 		return nil, err
 	}
 
 	if err := mc.watchCancel(ctx); err != nil {
+		mc.log(err.Error())
 		return nil, err
 	}
 	defer mc.finish()
