@@ -738,7 +738,13 @@ func (mc *mysqlConn) ResetSession(ctx context.Context) error {
 // IsValid implements driver.Validator interface
 // (From Go 1.15)
 func (mc *mysqlConn) IsValid() bool {
-	return !mc.closed.Load() && !mc.buf.busy()
+	retIsValid := !mc.closed.Load() && !mc.buf.busy()
+	if retIsValid {
+		mc.log("mysql connection is valid")
+	} else {
+		mc.log("mysql connection is invalid")
+	}
+	return retIsValid
 }
 
 var _ driver.SessionResetter = &mysqlConn{}
