@@ -157,6 +157,7 @@ func (mc *mysqlConn) begin(readOnly bool) (driver.Tx, error) {
 }
 
 func (mc *mysqlConn) Close() (err error) {
+	mc.log("Connection closed")
 	// Makes Close idempotent
 	if !mc.closed.Load() {
 		err = mc.writeCommandPacket(comQuit)
