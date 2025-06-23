@@ -505,17 +505,20 @@ func (mc *mysqlConn) finish() {
 
 // Ping implements driver.Pinger interface
 func (mc *mysqlConn) Ping(ctx context.Context) (err error) {
+	mc.log("Ping mysql connection")
 	if mc.closed.Load() {
 		return driver.ErrBadConn
 	}
 
 	if err = mc.watchCancel(ctx); err != nil {
+		mc.log(err.Error())
 		return
 	}
 	defer mc.finish()
 
 	handleOk := mc.clearResult()
 	if err = mc.writeCommandPacket(comPing); err != nil {
+		mc.log(err.Error())
 		return mc.markBadConn(err)
 	}
 
