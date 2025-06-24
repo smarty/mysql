@@ -716,7 +716,6 @@ func (mc *mysqlConn) ResetSession(ctx context.Context) error {
 	// could cause data corruption, so it's safe to return ErrBadConn
 	// if the check fails.
 	if mc.cfg.CheckConnLiveness {
-		mc.log("Checking conn liveness in ResetSession")
 		conn := mc.netConn
 		if mc.rawConn != nil {
 			conn = mc.rawConn
