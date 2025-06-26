@@ -157,7 +157,6 @@ func (mc *mysqlConn) begin(readOnly bool) (driver.Tx, error) {
 }
 
 func (mc *mysqlConn) Close() (err error) {
-	mc.log("Connection closed")
 	// Makes Close idempotent
 	if !mc.closed.Load() {
 		err = mc.writeCommandPacket(comQuit)
@@ -351,8 +350,6 @@ func (mc *mysqlConn) Exec(query string, args []driver.Value) (driver.Result, err
 	if mc.closed.Load() {
 		return nil, driver.ErrBadConn
 	}
-	queryStart := query[:20]
-	mc.log("Exec: ****  ", queryStart, "  ****")
 	if len(args) != 0 {
 		if !mc.cfg.InterpolateParams {
 			return nil, driver.ErrSkip
