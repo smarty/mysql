@@ -31,6 +31,7 @@ func (mc *mysqlConn) readNext(n int) ([]byte, error) {
 	if mc.buf.len() < n {
 		err := mc.buf.fill(n, mc.readWithTimeout)
 		if err != nil {
+			mc.log(err)
 			return nil, err
 		}
 	}
@@ -53,6 +54,7 @@ func (mc *mysqlConn) readPacket() ([]byte, error) {
 		if err != nil {
 			mc.close()
 			if cerr := mc.canceled.Value(); cerr != nil {
+				mc.log(cerr)
 				return nil, cerr
 			}
 			mc.log(err)
@@ -95,6 +97,7 @@ func (mc *mysqlConn) readPacket() ([]byte, error) {
 		if err != nil {
 			mc.close()
 			if cerr := mc.canceled.Value(); cerr != nil {
+				mc.log(cerr)
 				return nil, cerr
 			}
 			mc.log(err)
